@@ -3,6 +3,7 @@ require 'nokogiri'
 require 'open-uri'
 require 'json'
 require 'google_drive'
+require 'csv'
 
 class Scrapper
 	def get_townhall_names
@@ -67,6 +68,14 @@ class Scrapper
 		ws.save
 	end
 
+	def save_as_csv
+		buffer = open("https://docs.google.com/spreadsheets/d/1WdQLc0yBbIqcyjyQGj3ZPAChYY5KHjltJDxogtcWgr8/export?format=csv&gid=0").read
+		CSV.parse(buffer).length - 1 #CSV counts the header row; we only want cities and emails
+		File.open("/Users/noemargui/Desktop/THP/Week3/Day12/Mass_Data_Saving/db/emails.csv", 'wb') do |file|
+	    file << buffer
+		end
+	end
+
 	def perform
 		townhall_names = get_townhall_names
 		townhall_url = get_townhall_urls
@@ -74,5 +83,6 @@ class Scrapper
 		hash_final = make_the_hash(townhall_names, townhall_url, townhall_email)
 		save_as_json(hash_final)
 		save_as_spreadsheet(townhall_names, townhall_email)
+		save_as_csv
 	end
 end
