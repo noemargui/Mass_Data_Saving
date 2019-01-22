@@ -2,6 +2,7 @@ require 'rubygems'
 require 'nokogiri'
 require 'open-uri'
 require 'json'
+require 'google_drive'
 
 class Scrapper
 	def get_townhall_names
@@ -44,11 +45,34 @@ class Scrapper
 		end
 	end
 
+	def save_as_spreadsheet(townhall_names, townhall_email)
+		session = GoogleDrive::Session.from_config("config.json")
+		ws = session.spreadsheet_by_key("1WdQLc0yBbIqcyjyQGj3ZPAChYY5KHjltJDxogtcWgr8").worksheets[0]
+		ws[1, 1] = "Noms des Villes"
+		i = 2
+		y = 0
+		while i < 186
+			ws[i, 1] = townhall_names[y]
+			i = i+1
+			y = y+1
+		end
+		ws[1, 2] = "E-mails des dites mairie"
+		i = 2
+		y = 0
+		while i < 186
+			ws[i, 2] = townhall_email[y]
+			i = i+1
+			y = y+1
+		end
+		ws.save
+	end
+
 	def perform
 		townhall_names = get_townhall_names
 		townhall_url = get_townhall_urls
 		townhall_email = get_townhall_email(townhall_url)
 		hash_final = make_the_hash(townhall_names, townhall_url, townhall_email)
 		save_as_json(hash_final)
+		save_as_spreadsheet(townhall_names, townhall_email)
 	end
 end
