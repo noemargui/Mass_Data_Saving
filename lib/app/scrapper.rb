@@ -7,7 +7,11 @@ require 'csv'
 
 class Scrapper
 
-	def get_townhall_names
+# --------------------------------
+#  Ci-dessous les 4 méthodes me permettant de faire mon scrapping de mail proprement
+# --------------------------------
+
+	def get_townhall_names # ici on récupère les noms
 		townhall_names = []
 		page = Nokogiri::HTML(open("http://annuaire-des-mairies.com/val-d-oise.html"))
 		page.xpath("//p/a").each do |name|
@@ -16,7 +20,7 @@ class Scrapper
 		return townhall_names
 	end
 
-	def get_townhall_urls
+	def get_townhall_urls # ici on récupère les urls
 		townhall_url = []
 		page = Nokogiri::HTML(open("http://annuaire-des-mairies.com/val-d-oise.html"))
 		page.xpath("//p/a/@href").each do |hall|
@@ -25,7 +29,7 @@ class Scrapper
 		return townhall_url
 	end
 
-	def get_townhall_email(townhall_url)
+	def get_townhall_email(townhall_url) # ici on récupère les emails, grâce aux urls en placés en paramètres
 	 townhall_email = []
 	 townhall_url.each do |url_town|
 	   page = Nokogiri::HTML(open(url_town))
@@ -36,16 +40,24 @@ class Scrapper
 	 return townhall_email
 	end
 
-	def make_the_hash(townhall_names, townhall_url, townhall_email)
+	def make_the_hash(townhall_names, townhall_url, townhall_email) # ici on crée le hash final contenant toutes les informations
 		hash_final = Hash[get_townhall_names.zip(get_townhall_email(get_townhall_urls))]
 	  return hash_final
 	end
+
+# --------------------------------
+#  Méthode qui permet d'exporter les données vers un fichier JSON
+# --------------------------------
 
 	def save_as_json(hash_final)
 		File.open("/Users/noemargui/Desktop/THP/Week3/Day12/Mass_Data_Saving/db/emails.json","w") do |f|
 			f.write(hash_final.to_json)
 		end
 	end
+
+# --------------------------------
+#  Méthode qui permet d'exporter les données vers mon fichier SpreadSheet : https://docs.google.com/spreadsheets/d/1WdQLc0yBbIqcyjyQGj3ZPAChYY5KHjltJDxogtcWgr8/edit#gid=0
+# --------------------------------
 
 	def save_as_spreadsheet(townhall_names, townhall_email)
 		session = GoogleDrive::Session.from_config("config.json")
@@ -69,9 +81,17 @@ class Scrapper
 		ws.save
 	end
 
+# --------------------------------
+#  Méthode qui permet d'exporter les données vers un fichier CSV
+# --------------------------------
+
 	def save_as_csv(hash_final)
 		CSV.open("/Users/noemargui/Desktop/THP/Week3/Day12/Mass_Data_Saving/db/emails.csv", "wb") {|csv| hash_final.to_a.each {|elem| csv << elem} }
 	end
+
+# --------------------------------
+#  Mon perform qui permet de faire tourner toute la machine
+# --------------------------------
 
 	def perform
 		townhall_names = get_townhall_names
